@@ -1,0 +1,44 @@
+{
+  "version": 1,
+  "name": "Synthetic service continuity tabletop",
+  "horizon": 72,
+  "review": "",
+  "scenarios": [
+    {
+      "name": "Communications continuity",
+      "domain": "EW",
+      "start": 8,
+      "duration": 6,
+      "recovery": 12,
+      "lossLow": 0.15,
+      "lossHigh": 0.4,
+      "threshold": 0.8,
+      "basis": "synthetic",
+      "source": "Fictional tabletop assumption; no emitter or equipment model."
+    },
+    {
+      "name": "Protective service recovery",
+      "domain": "DE",
+      "start": 8,
+      "duration": 4,
+      "recovery": 20,
+      "lossLow": 0.1,
+      "lossHigh": 0.5,
+      "threshold": 0.8,
+      "basis": "synthetic",
+      "source": "Fictional normalized service degradation; no physical exposure calculation."
+    },
+    {
+      "name": "Digital service restoration",
+      "domain": "Cyber",
+      "start": 8,
+      "duration": 10,
+      "recovery": 16,
+      "lossLow": 0.2,
+      "lossHigh": 0.6,
+      "threshold": 0.8,
+      "basis": "synthetic",
+      "source": "Fictional service outage exercise; no network connection."
+    }
+  ]
+}
