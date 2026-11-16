@@ -1,0 +1,11 @@
+import{test}from'node:test';import assert from'node:assert/strict';import{evaluate,validate,csv}from'../model.mjs';
+const base=()=>({version:1,name:'Test',horizon:6,review:'',scenarios:[{name:'A',domain:'Cyber',start:1,duration:2,recovery:2,lossLow:.2,lossHigh:.4,threshold:.7,basis:'synthetic',source:''}]});
+test('hand-calculated hourly loss and recovery',()=>{const r=evaluate(base())[0];assert.deepEqual(r.pessimistic.points.map(p=>p.service),[1,.6,.6,.6,.8,1]);assert.ok(Math.abs(r.pessimistic.lossHours-1.4)<1e-10);assert.equal(r.pessimistic.hoursBelowThreshold,3);});
+test('bounds monotonic and deterministic',()=>{const s=base(),r=evaluate(s)[0];assert.deepEqual(evaluate(s),evaluate(s));assert.ok(r.optimistic.averageService>=r.pessimistic.averageService);});
+test('no event when duration zero',()=>{const s=base();s.scenarios[0].duration=0;assert.equal(evaluate(s)[0].pessimistic.lossHours,0);});
+test('zero recovery restores immediately at event end',()=>{const s=base();s.scenarios[0].recovery=0;const r=evaluate(s)[0];assert.equal(r.pessimistic.points[3].service,1);});
+test('out-of-horizon event has no effect',()=>{const s=base();s.scenarios[0].start=20;assert.equal(evaluate(s)[0].pessimistic.averageService,1);});
+test('unknown values and reversed bounds rejected',()=>{for(const v of [null,NaN,Infinity,-.1,1.1,'0.2']){const s=base();s.scenarios[0].lossHigh=v;assert.throws(()=>validate(s));}const s=base();s.scenarios[0].lossLow=.9;assert.throws(()=>validate(s));});
+test('invalid domain, duplicate name, noninteger horizon rejected',()=>{for(const change of [s=>s.horizon=1.2,s=>s.scenarios[0].domain='other',s=>s.scenarios.push({...s.scenarios[0]})]){const s=base();change(s);assert.throws(()=>validate(s));}});
+test('evidence flags separate from metrics',()=>{const s=base(),a=evaluate(s)[0];s.review='Reviewed';s.scenarios[0].source='Record 1';s.scenarios[0].basis='measured';const b=evaluate(s)[0];assert.equal(a.flags.length,3);assert.equal(b.flags.length,0);assert.deepEqual(a.pessimistic,b.pessimistic);});
+test('CSV safely quotes spreadsheet formulas',()=>{const s=base();s.scenarios[0].name='=1+1';assert.ok(csv(evaluate(s)).includes("\"'=1+1\""));});
